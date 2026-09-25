@@ -1,0 +1,14 @@
+# A short ballad using only shorthand meter.
+sections:
+  verse:
+    - iambic 3
+    - iambic 3
+    - iambic 3
+    - iambic 2
+  chorus:
+    repeat: true
+    lines:
+      - dactylic 2
+      - dactylic 2
+
+outline: [verse, chorus, verse, chorus]

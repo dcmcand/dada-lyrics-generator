@@ -1,0 +1,6 @@
+# Pronunciation overrides: word -> quoted stress string (0/1).
+# The string's length is the word's syllable count.
+# Use these for slang, names, or words the tool guesses wrong
+# (they are listed on stderr as "guessed pronunciations").
+streetlights: "11"
+dreamin': "10"

@@ -1,0 +1,32 @@
+# A full pop structure for `dada generate`.
+#
+# Each line is a meter template:
+#   - a quoted stress string: 0 = unstressed, 1 = stressed, x = either.
+#     Its length is the line's syllable count. Always quote it ("0101"),
+#     because YAML reads unquoted digits as a number.
+#   - or shorthand "<foot> <count>": iambic (01), trochaic (10),
+#     anapestic (001), dactylic (100).
+#
+# A section is either a plain list of lines, or a mapping with `lines`
+# and `repeat: true` to reuse the same lyrics every time it appears.
+sections:
+  verse:
+    - iambic 4
+    - iambic 4
+    - "x1010101"
+    - iambic 3
+  pre-chorus:
+    - trochaic 2
+    - trochaic 2
+  chorus:
+    repeat: true
+    lines:
+      - "1011"
+      - anapestic 3
+      - "1011"
+      - iambic 4
+  bridge:
+    - trochaic 3
+    - trochaic 3
+
+outline: [verse, pre-chorus, chorus, verse, pre-chorus, chorus, bridge, chorus]
