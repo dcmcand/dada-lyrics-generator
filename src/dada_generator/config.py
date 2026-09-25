@@ -29,7 +29,7 @@ def _one_line(text: str) -> str:
 
 def _load_yaml(path: Path) -> Any:
     try:
-        text = Path(path).read_text(encoding="utf-8")
+        text = Path(path).read_text(encoding="utf-8-sig")
     except UnicodeDecodeError as exc:
         raise DadaError(f"{path}: cannot read: not valid UTF-8 text") from exc
     except OSError as exc:
@@ -99,6 +99,10 @@ def load_overrides(path: Path) -> dict[str, str]:
         raise DadaError(f"{path}: expected a mapping of word: stress string")
     overrides = {}
     for word, stress in data.items():
+        if not isinstance(word, str):
+            raise DadaError(
+                f'{path}: override key {word!r} is not a word; quote the word, e.g. "no": "1"'
+            )
         if not isinstance(stress, str) or not _OVERRIDE_RE.fullmatch(stress):
             raise DadaError(
                 f"{path}: '{word}' must map to a quoted stress string of 0/1, "

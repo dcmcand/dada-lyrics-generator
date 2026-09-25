@@ -1,4 +1,5 @@
 import re
+import unicodedata
 from collections.abc import Mapping
 
 import pronouncing
@@ -8,7 +9,7 @@ _VOWEL_GROUP_RE = re.compile(r"[aeiouy]+")
 
 
 def normalize(word: str) -> str:
-    return word.lower().replace("’", "'").replace("‘", "'")
+    return unicodedata.normalize("NFC", word).lower().replace("\u2019", "'").replace("\u2018", "'")
 
 
 class Pronouncer:
@@ -35,15 +36,32 @@ class Pronouncer:
         return "?" if count == 1 else "1" + "0" * (count - 1)
 
     def _guess_syllables(self, key: str) -> int:
-        vowel_groups = len(_VOWEL_GROUP_RE.findall(key))
+        vowel_groups = len(_VOWEL_GROUP_RE.findall(_syllable_letters(key)))
         if key.endswith("e") and not key.endswith("le") and vowel_groups > 1:
             vowel_groups -= 1
         hyphen_parts = len(self._hyphenator.positions(key)) + 1
         return max(vowel_groups, hyphen_parts, 1)
 
 
+def _strip_accents(key: str) -> str:
+    return "".join(c for c in unicodedata.normalize("NFD", key) if not unicodedata.combining(c))
+
+
+def _syllable_letters(key: str) -> str:
+    """Accent-stripped letters, with a break before a vowel carrying a diaeresis (noël)."""
+    letters: list[str] = []
+    for char in unicodedata.normalize("NFD", key):
+        if char == "\u0308" and letters:
+            letters.insert(len(letters) - 1, "-")
+        elif not unicodedata.combining(char):
+            letters.append(char)
+    return "".join(letters)
+
+
 def _cmu_stress(key: str) -> str | None:
     candidates = [key]
+    if _strip_accents(key) != key:
+        candidates.append(_strip_accents(key))
     if key.endswith("'"):
         candidates.append(key[:-1])
     if key.endswith("in'"):

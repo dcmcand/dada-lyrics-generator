@@ -12,6 +12,7 @@ from dada_generator.source import SourceLine, read_sources
         ("[Chorus]\nsing it\n  [Verse 2]  \nagain\n", ["sing it", "again"]),
         ("line one\r\nline two\r\n", ["line one", "line two"]),
         ("not [a label] here\n", ["not [a label] here"]),
+        ("\ufeff[Chorus]\nsing it\n", ["sing it"]),  # UTF-8 BOM
     ],
 )
 def test_read_sources_cleans_lines(tmp_path, content, expected):

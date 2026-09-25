@@ -1,4 +1,5 @@
 import re
+import unicodedata
 from collections.abc import Iterable
 from dataclasses import dataclass
 
@@ -13,7 +14,7 @@ CONJUNCTIONS = frozenset(
 # Phrase breaks: sentence/clause punctuation, brackets, quotes, en/em dashes,
 # a spaced hyphen, or a run of two or more hyphens. A hyphen inside a word
 # ("well-known") is not a break.
-_BREAK_RE = re.compile(r"[,.;:!?()\[\]{}\"“”–—]|\s-+\s|-{2,}")
+_BREAK_RE = re.compile(r"[,.;:!?()\[\]{}\"\u201c\u201d\u2013\u2014]|\s-+\s|-{2,}")
 
 # A word is letters/digits with optional internal apostrophes. A trailing
 # apostrophe is kept only after "in" (dropped-g spellings like "runnin'").
@@ -27,7 +28,7 @@ class Chunk:
 
 
 def tokenize(text: str) -> list[str]:
-    normalized = text.replace("’", "'").replace("‘", "'")
+    normalized = unicodedata.normalize("NFC", text).replace("\u2019", "'").replace("\u2018", "'")
     return _WORD_RE.findall(normalized)
 
 

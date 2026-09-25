@@ -103,6 +103,8 @@ def test_load_overrides(tmp_path, text, expected):
         ("zorp: '1x'", "must map to a quoted stress string"),
         ("zorp: ''", "must map to a quoted stress string"),
         ("zorp: [1]", "invalid YAML|must map to a quoted stress string"),
+        ("no: '10'", "quote the word"),  # YAML reads bare no/yes/on/off as booleans
+        ("123: '10'", "quote the word"),
     ],
 )
 def test_load_overrides_errors(tmp_path, text, message):

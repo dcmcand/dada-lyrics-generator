@@ -9,11 +9,12 @@ from dada_generator.source import SourceLine
     [
         ("the river hums", ["the", "river", "hums"]),
         ("don't stop", ["don't", "stop"]),
-        ("don’t stop", ["don't", "stop"]),
+        ("don\u2019t stop", ["don't", "stop"]),
         ("runnin' late", ["runnin'", "late"]),
-        ("dreamin’ on", ["dreamin'", "on"]),
+        ("dreamin\u2019 on", ["dreamin'", "on"]),
         ("'quoted' word", ["quoted", "word"]),
-        ("café society", ["café", "society"]),
+        ("caf\u00e9 society", ["caf\u00e9", "society"]),
+        ("nai\u0308ve cafe\u0301", ["na\u00efve", "caf\u00e9"]),  # NFD input
         ("well-known road", ["well", "known", "road"]),
         ("...!?", []),
     ],
@@ -31,7 +32,7 @@ def _words(chunks):
     [
         ("I walked home, the streetlights hummed", ["I walked home", "the streetlights hummed"]),
         ("stop. go! why? now; here: there", ["stop", "go", "why", "now", "here", "there"]),
-        ("left — right – center", ["left", "right", "center"]),
+        ("left \u2014 right \u2013 center", ["left", "right", "center"]),
         ("up - down -- around", ["up", "down", "around"]),
         ("well-known road", ["well known road"]),
         ("I ran and she hid", ["I ran", "and she hid"]),

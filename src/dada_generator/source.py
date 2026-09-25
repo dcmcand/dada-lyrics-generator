@@ -19,7 +19,7 @@ def read_sources(paths: Sequence[Path]) -> list[SourceLine]:
     lines: list[SourceLine] = []
     for path in paths:
         try:
-            content = Path(path).read_text(encoding="utf-8")
+            content = Path(path).read_text(encoding="utf-8-sig")
         except UnicodeDecodeError as exc:
             raise DadaError(f"cannot read {path}: not valid UTF-8 text") from exc
         except OSError as exc:
