@@ -4,6 +4,8 @@ version = "0.1.0"
 description = "Dadaist cut-up lyric generator"
 readme = "README.md"
 requires-python = ">=3.12"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
 dependencies = [
     "pronouncing>=0.3",
     "pyphen>=0.17",
