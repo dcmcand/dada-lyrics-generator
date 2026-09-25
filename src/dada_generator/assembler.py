@@ -56,6 +56,21 @@ def _min_units(lengths: Sequence[int], limit: int) -> list[int | None]:
     return best
 
 
+# In phrase mode, each extra unit a length choice forces halves its weight:
+# whole phrases are preferred, but joins still happen so one phrase cannot
+# fill every line that matches its length.
+PHRASE_SPLIT_PENALTY = 0.5
+
+
+def _length_weight(length: int, remaining: int, best: list, pool: Pool, mode: str) -> float:
+    """Weight a length by how many units have it, so rare lengths are not over-used."""
+    weight = float(len(pool.by_length[length]))
+    if mode == "phrase":
+        extra = best[remaining - length] + 1 - best[remaining]
+        weight *= PHRASE_SPLIT_PENALTY**extra
+    return weight
+
+
 def fill_line(template: str, pool: Pool, mode: str, rng: random.Random) -> Line:
     """Fill one line to the template's syllable count, or the nearest reachable count."""
     target = len(template)
@@ -69,14 +84,9 @@ def fill_line(template: str, pool: Pool, mode: str, rng: random.Random) -> Line:
     position = 0
     remaining = actual
     while remaining:
-        allowed = [
-            n
-            for n in pool.lengths
-            if n <= remaining
-            and best[remaining - n] is not None
-            and (mode != "phrase" or best[remaining - n] == best[remaining] - 1)
-        ]
-        length = rng.choice(allowed)
+        allowed = [n for n in pool.lengths if n <= remaining and best[remaining - n] is not None]
+        weights = [_length_weight(n, remaining, best, pool, mode) for n in allowed]
+        length = rng.choices(allowed, weights)[0]
         candidates = pool.by_length[length]
         window = pattern[position : position + length]
         scores = [mismatch(window, unit.stress) for unit in candidates]

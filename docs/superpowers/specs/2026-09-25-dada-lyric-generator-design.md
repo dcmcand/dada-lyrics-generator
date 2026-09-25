@@ -145,12 +145,20 @@ lengths `L = {unit.syllables}`:
    If no length in `1..2N` is reachable (empty pool), raise `DadaError`.
 3. Fill left to right with `r` remaining:
    - Allowed lengths: `l` in `L` with `l <= r` and `reach[r - l]`.
-   - Phrase mode additionally requires `min_units[r - l] == min_units[r] - 1`
-     (stay on a fewest-units path, so a whole phrase is used when one fits).
-   - Choose a length uniformly at random from the allowed lengths.
+   - Choose a length at random, weighted by `count(l) * w(l)`, where
+     `count(l)` is the number of pool units of that length (so a rare length
+     is not over-used) and `w(l)` is 1 in word mode. In phrase mode
+     `w(l) = 0.5 ** extra(l)` with `extra(l) = min_units[r - l] + 1 - min_units[r]`
+     (the extra units that choice forces): fewer, longer phrases are
+     preferred but not required, so one phrase cannot fill every line.
    - Among units of that length, compute `mismatch` against the matching
      slice of `T`; choose uniformly at random among those with the lowest
      score.
+
+   (Revised 2026-09-25: the original rule, "phrase mode must stay on a
+   fewest-units path; length chosen uniformly", made output degenerate on a
+   single short source, e.g. every 6-syllable line was the only 6-syllable
+   phrase.)
 4. Join chosen unit texts with single spaces to form the line.
 
 Because every step keeps the remainder reachable, the fill always terminates
@@ -264,3 +272,4 @@ POS-based clause detection, neural G2P, GitHub repo creation.
 | 10 | `dada generate ... > song.txt` saves only lyrics | Run that triggers both a fallback warning and guessed words, redirecting stdout to a file: file contains no `warning:` or `guessed pronunciations:` lines; stderr contains them | automated: `tests/e2e/test_streams.py` + narrated: shell transcript with `cat song.txt` | |
 | 11 | I can copy an example, edit it per the README, and run it | Copy `examples/ballad.yaml`, change the outline and one template following README syntax, run it: exit 0, new structure reflected in output | narrated: transcript of copy, edit, run | |
 | 12 | CI runs lint + tests on push/PR and passes | Workflow file runs ruff check, ruff format --check, pytest on push and pull_request; locally, the same steps pass (via `act` if available, otherwise running the exact workflow commands). Full verification requires a GitHub remote and is expected to be user-waived until then | narrated: local run transcript of the workflow steps; GitHub run URL once pushed | |
+| 13 | Repeated phrases do not dominate the song | With `examples/ballad.yaml` and `examples/pop-song.yaml` against `examples/sample-lyrics.txt`, seeds 1-20: phrase mode mean distinct-line ratio over generated sections >= 0.6 (was 0.20 / 0.33 before the revision); word mode most-common-word share never exceeds 30% of words (was up to 39%) | automated: `tests/e2e/test_variety.py` + narrated: ballad run transcript | |

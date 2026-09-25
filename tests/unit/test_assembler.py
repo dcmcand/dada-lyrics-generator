@@ -54,11 +54,24 @@ def _reachable(lengths, target):
     return ok[target]
 
 
-def test_phrase_mode_prefers_fewest_units():
+def test_phrase_mode_prefers_but_does_not_require_fewest_units():
     pool = Pool([u("a", "?"), u("bbbb", "1010"), u("cccccccc", "10101010")])
-    for seed in range(50):
-        line = fill_line("10101010", pool, "phrase", random.Random(seed))
-        assert [x.text for x in line.units] == ["cccccccc"]
+    unit_counts = [
+        len(fill_line("10101010", pool, "phrase", random.Random(seed)).units) for seed in range(200)
+    ]
+    whole = unit_counts.count(1)
+    assert whole > len(unit_counts) / 2  # one whole phrase is the most common fill
+    assert whole < len(unit_counts)  # but joins still happen, so one phrase cannot own the line
+
+
+def test_rare_lengths_are_not_overused():
+    """A length held by one unit is drawn about as often as that unit, not 1/len(lengths)."""
+    pool = Pool(
+        [u("radio", "101", mode="word")] + [u(f"w{i}", "?", mode="word") for i in range(20)]
+    )
+    lines = [fill_line("xxx", pool, "word", random.Random(seed)) for seed in range(300)]
+    rare = sum(any(x.text == "radio" for x in line.units) for line in lines)
+    assert rare / len(lines) < 0.2
 
 
 def test_word_mode_mixes_lengths():

@@ -78,9 +78,10 @@ cp examples/ballad.yaml my-song.yaml
 Every line gets exactly its template's syllable count when the pool allows.
 Among units that fit, the tool prefers those whose stress best matches the
 template; one-syllable words count as matching either way. In phrase mode it
-uses a whole phrase when one fits and joins phrases only when needed, so with
-a single short source song the same phrase can come back often. Add more
-lyric files, or use `--mode word`, for more variety.
+prefers a whole phrase when one fits, but still joins shorter phrases some of
+the time, so a single phrase does not fill every line of its length. With a
+single short source song some phrases will still come back; add more lyric
+files, or use `--mode word`, for more variety.
 
 If a line's syllable count cannot be reached (for example, every phrase is
 2 syllables and the line needs 5), it uses the nearest count and warns:
