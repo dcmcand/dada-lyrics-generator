@@ -1,0 +1,35 @@
+[project]
+name = "dada-generator"
+version = "0.1.0"
+description = "Dadaist cut-up lyric generator"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "pronouncing>=0.3",
+    "pyphen>=0.17",
+    "pyyaml>=6.0",
+]
+
+[project.scripts]
+dada = "dada_generator.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+    "ruff>=0.6",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+extend-exclude = ["docs"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
