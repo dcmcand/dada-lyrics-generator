@@ -1,0 +1,9 @@
+sections:
+  verse:
+    - iambic 3
+    - iambic 3
+  chorus:
+    repeat: true
+    lines:
+      - trochaic 2
+outline: [verse, chorus, verse, chorus]
