@@ -23,7 +23,8 @@ gets a complete, on-meter lyric sheet on stdout, in either phrase or word mode.
 | Stress strictness | Syllable count exact; stress scored (lowest mismatch wins); monosyllables are stress-flexible |
 | Fallback | Combine units to reach the exact count; if the count is unreachable, use nearest reachable count and warn |
 | Phrase boundaries | Line breaks + punctuation + split before conjunctions |
-| Out-of-dictionary words | CMU (`pronouncing`) -> user override file -> Pyphen syllables + first-syllable stress guess; guessed words reported on stderr |
+| Out-of-dictionary words | User override file -> CMU (`pronouncing`, with `in'` -> `ing` retry) -> guess: syllables = max(Pyphen, vowel-group count), first-syllable stress; guessed words reported on stderr |
+| Repeated sections | A section marked `repeat: true` is generated once and reused on every outline occurrence (hook-style chorus); other sections regenerate each time |
 | Output | Plain-text lyric sheet on stdout; warnings/errors on stderr; no file export, no JSON |
 | Meter notation | Stress strings (`"01010101"`) or foot shorthand (`iambic 4`); `x` wildcard |
 | Config layout | One song YAML containing `sections` and `outline` |
@@ -59,18 +60,25 @@ sections:
     - "01010101"
     - iambic 3
   chorus:
-    - trochaic 3
-    - trochaic 3
-    - "10101010"
+    repeat: true
+    lines:
+      - trochaic 3
+      - trochaic 3
+      - "10101010"
 outline: [verse, chorus, verse, chorus, chorus]
 ```
 
-- `sections`: mapping of section name -> non-empty list of line templates.
+- `sections`: mapping of section name -> either a non-empty list of line
+  templates, or a mapping `{lines: <non-empty list>, repeat: <bool, default false>}`.
+  With `repeat: true` the section is generated on its first outline occurrence
+  and the same lyrics are reused for every later occurrence.
 - A line template is either a stress string over the alphabet `0`, `1`, `x`
   (length = syllable count) or `<foot> <n>` where foot is one of `iambic`
   (`01`), `trochaic` (`10`), `anapestic` (`001`), `dactylic` (`100`) and `n`
   is a positive integer.
 - `outline`: non-empty list of section names, each defined in `sections`.
+- Stress strings must be quoted in YAML: an unquoted `0101` is parsed by YAML
+  as an integer, and the loader rejects non-string templates with a hint to quote them.
 
 ### Pronunciation overrides YAML
 
@@ -90,7 +98,7 @@ Package `dada_generator` under `src/`, console script `dada`.
 |--------|----------------|------------|
 | `source.py` | Read lyric files; drop blank lines and `[Section]` labels; return `(line, source)` records | - |
 | `chunker.py` | `chunk(lines, mode)` -> text units. Phrase: split on line breaks, punctuation (`, . ; : ! ? -` and em/en dashes), and before conjunctions. Word: split into words, strip surrounding punctuation (keep internal apostrophes) | - |
-| `pronounce.py` | `Pronouncer`: word -> `(syllables, stress)`. Order: override file, CMU via `pronouncing`, Pyphen + first-syllable-stress guess. Records guessed words | `pronouncing`, `pyphen` |
+| `pronounce.py` | `Pronouncer.stress(word)` -> stress string (length = syllables). Order: override file, CMU via `pronouncing` (lowercased; then without trailing `'`; then `in'` -> `ing`), guess. Records guessed words | `pronouncing`, `pyphen` |
 | `units.py` | `Unit` dataclass (`text`, `syllables`, `stress`, `source`, `mode`); `tag(chunks, pronouncer)` builds unit stress from word stresses | `pronounce` |
 | `meter.py` | Parse templates (string / shorthand) into stress strings; `mismatch(template_slice, unit_stress)` scoring | - |
 | `config.py` | Load and validate song YAML and overrides YAML into dataclasses | `pyyaml`, `meter` |
@@ -113,8 +121,12 @@ fragment, and a split never produces an empty chunk.
 - Every syllable of a monosyllabic word becomes `?` (flexible).
 - Phrase stress is the concatenation of its words' stresses. Example:
   "the river hums" -> `?10?`.
-- Guessed polysyllabic words: first syllable `1`, rest `0`. Guessed
-  monosyllables: `?`.
+- Guessed words: syllables = max(Pyphen hyphenation parts, vowel-group count
+  with a silent-final-`e` adjustment, minimum 1). Pyphen alone undercounts
+  because it is a hyphenator (it will not split short word endings, e.g.
+  `dreamin` -> 1). Polysyllabic guesses: first syllable `1`, rest `0`;
+  monosyllabic guesses: `?`.
+- Override values are used exactly as given (a user may pin a monosyllable to `0`).
 - `mismatch(template, stress)` = number of positions where both characters are
   definite (`0`/`1`) and differ. `?` and `x` never mismatch.
 
@@ -143,6 +155,11 @@ lengths `L = {unit.syllables}`:
 
 Because every step keeps the remainder reachable, the fill always terminates
 without backtracking.
+
+`build_song` walks the outline. For a section with `repeat: true` it caches the
+first generated section and reuses it on later occurrences (warnings are
+emitted only when a section is actually generated). Other sections are
+generated fresh on every occurrence.
 
 ## Output
 
