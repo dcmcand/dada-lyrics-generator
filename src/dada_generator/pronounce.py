@@ -48,7 +48,7 @@ def _strip_accents(key: str) -> str:
 
 
 def _syllable_letters(key: str) -> str:
-    """Accent-stripped letters, with a break before a vowel carrying a diaeresis (noël)."""
+    """Accent-stripped letters, breaking before a vowel with a diaeresis (e.g. "noel")."""
     letters: list[str] = []
     for char in unicodedata.normalize("NFD", key):
         if char == "\u0308" and letters:
